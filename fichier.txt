@@ -1,4 +1,4 @@
-ligne 1
+ligne 1 modifiée par feature-c
 ligne 2
 ligne 3
 ligne feature-a
