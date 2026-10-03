@@ -1,4 +1,4 @@
-ligne 1 modifiée par main
+ligne 1 modifiée par main et feature-c
 ligne 2
 ligne 3
 ligne feature-a
