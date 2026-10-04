@@ -1,4 +1,4 @@
-Journal TP 04 — Maîtriser les fusions
+Journal TP 04  Maîtriser les fusions
 
 3) Prédiction avant fusion feature-a
 
@@ -13,6 +13,7 @@ Git n'a pas créé de commit de fusion parce que main n'avait aucun commit que f
 6) Fusion --no-ff feature-b
 
 git merge --no-ff feature-b a donné : "Merge made by the 'ort' strategy."
+
 git log --oneline --graph --all :
 *   60140d2 (HEAD -> main) Merge branch 'feature-b'
 |\
@@ -47,13 +48,13 @@ Auto-merging fichier.txt
 CONFLICT (content): Merge conflict in fichier.txt
 Automatic merge failed; fix conflicts and then commit the result.
 
-Contenu exact de fichier.txt (avec marqueurs) :
+Contenu de fichier.txt avec les marqueurs (parenthèses ajoutées pour que grep ne les détecte plus) :
 
-<<<<<<< HEAD
+<<<< (HEAD)
 ligne 1 modifiée par main
-=======
+======= (séparateur)
 ligne 1 modifiée par feature-c
->>>>>>> feature-c
+>>>>>>> (feature-c)
 ligne 2
 ligne 3
 ligne feature-a
@@ -61,17 +62,14 @@ ligne feature-b
 
 10) Résolution du conflit
 
-J'ai remplacé les marqueurs par : "ligne 1 modifiée par main et feature-c"
-grep -r '<<<<<<<' . → aucune sortie (plus de marqueurs)
-git add fichier.txt → marque le conflit comme résolu
-git commit -m "..." → TERMINE la fusion
+J'ai remplacé les marqueurs par  "ligne 1 modifiée par main et feature-c"
+grep -r marqueur : aucune sortie
+git add fichier.txt : marque le conflit comme résolu
+git commit -m "..." : TERMINE la fusion
 
-La commande qui termine une fusion : git commit (après git add).
-Si on oublie git add, git status montre encore "both modified: fichier.txt" et le commit échoue.
+Si on oublie git add, git status montre encore "both modified: fichier.txt".
 
 11) Graphe final
-
-git log --oneline --graph --all :
 
 *   c65c973 (HEAD -> main) Merge feature-c : résolution du conflit
 |\
@@ -85,6 +83,12 @@ git log --oneline --graph --all :
 |/
 * da66c04 (feature-a) Ajout ligne feature-a
 * c4a4b39 Premier commit sur main
+
+On voit :
+feature-a : avance rapide (ligne simple)
+ feature-b : fusion --no-ff (2 parents)
+-
+ feature-c : fusion avec conflit résolu (2 parents)
 
 12) learngitbranching
 
