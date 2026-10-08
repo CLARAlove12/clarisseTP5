@@ -1,95 +1,61 @@
-Journal TP 04  Maîtriser les fusions
+Journal TP 05  Git distant avec GitHub
 
-3) Prédiction avant fusion feature-a
+3)Signification de origin/main et de -u
 
-Avant de lancer git merge feature-a, je pensais qu'il n'y aurait PAS de commit de fusion, car les deux branches étaient alignées.
+Dans git branch -vv, la ligne de main affiche [origin/main]. Cela veut dire que ma branche locale main suit la branche distante origin/main. Ce lien sert a git push et git pull pour savoir ou envoyer et ou recuperer sans que je precise origin main a chaque fois.
 
-Résultat : "Updating c4a4b39..da66c04, Fast-forward"
+L'option -u (set-upstream) sert a creer ce lien. On la met seulement la premiere fois qu'on pousse une branche, parce qu'apres le lien est enregistre dans la config locale du depot. Le remettre a chaque fois ne change rien.
 
-4) Pourquoi pas de commit de fusion ?
+4)Authentification SSH et HTTPS
 
-Git n'a pas créé de commit de fusion parce que main n'avait aucun commit que feature-a n'avait pas déjà. main pointait sur c4a4b39 et feature-a sur da66c04 (son enfant direct). Git a juste pu "avancer" main sur da66c04. C'est une avance rapide (fast-forward).
+J'ai deux remotes vers le meme depot :
 
-6) Fusion --no-ff feature-b
+origin en SSH : git@github.com:CLARAlove12/clarisseTP5.git
+https-origin en HTTPS : https://github.com/CLARAlove12/clarisseTP5.git
 
-git merge --no-ff feature-b a donné : "Merge made by the 'ort' strategy."
+SSH demande une paire de cles (cle privee sur ma machine, cle publique sur GitHub). Il n'y a pas de mot de passe a taper a chaque push.
 
-git log --oneline --graph --all :
-*   60140d2 (HEAD -> main) Merge branch 'feature-b'
-|\
-| * b22d3cb (feature-b) Ajout ligne feature-b
-* | 3dcb970 Commit sur main (autre fichier)
-|/
-* da66c04 (feature-a) Ajout ligne feature-a
-* c4a4b39 Premier commit sur main
+HTTPS demande un token personnel (PAT) ou un gestionnaire d'identifiants. GitHub n'accepte plus le mot de passe du compte depuis 2021.
 
-git cat-file -p HEAD | grep parent :
-parent 3dcb97080a83fd4a0ee21cb6b295916f42b1a10a
-parent b22d3cb83208ed20f73ea5e11bf0a499f98fa506
+7) Prediction et resultat du git pull
 
-=> Le commit de fusion a 2 parents (un de chaque branche).
+Prediction : je pense que ca va etre une avance rapide (fast-forward). Car git status me dit "can be fast-forwarded" et mon local n'a aucun commit en avance sur le distant.
 
-7) git lg après fusion --no-ff
+Resultat reel : Fast-forward, exactement comme prevu. Pas d'ecart entre prediction et resultat.
 
-*   60140d2 (HEAD -> main) Merge branch 'feature-b'
-|\
-| * b22d3cb (feature-b) Ajout ligne feature-b
-* | 3dcb970 Commit sur main (autre fichier)
-|/
-* da66c04 (feature-a) Ajout ligne feature-a
-* c4a4b39 Premier commit sur main
+8)git fetch seul et git pull
 
-=> Forme "X" : les branches se séparent puis se rejoignent au commit de fusion.
+Apres git fetch seul : le nouveau commit est telecharge dans mon depot local, mais il se trouve uniquement dans la branche de suivi origin/main. Ma branche main ne bouge pas, et mes fichiers dans le dossier ne changent pas non plus.
 
-9) Conflit provoqué
+Apres git pull : fetch plus integration. Le commit arrive dans origin/main et aussi dans main, et mes fichiers sont mis a jour.
 
-Message d'erreur exact :
-Auto-merging fichier.txt
-CONFLICT (content): Merge conflict in fichier.txt
-Automatic merge failed; fix conflicts and then commit the result.
+Donc git pull = git fetch + git merge (ou rebase selon la config).
 
-Contenu de fichier.txt avec les marqueurs (parenthèses ajoutées pour que grep ne les détecte plus) :
+Preuve avec git log --oneline --all --graph : juste apres fetch on voit main et origin/main sur deux lignes differentes, origin/main en avance. Apres pull tout est aligne sur le meme commit.
 
-<<<< (HEAD)
-ligne 1 modifiée par main
-======= (séparateur)
-ligne 1 modifiée par feature-c
->>>>>>> (feature-c)
-ligne 2
-ligne 3
-ligne feature-a
-ligne feature-b
+10)Message de rejet verbatim
 
-10) Résolution du conflit
+To github.com:CLARAlove12/clarisseTP5.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'github.com:CLARAlove12/clarisseTP5.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
 
-J'ai remplacé les marqueurs par  "ligne 1 modifiée par main et feature-c"
-grep -r marqueur : aucune sortie
-git add fichier.txt : marque le conflit comme résolu
-git commit -m "..." : TERMINE la fusion
+11)force-with-lease et force
 
-Si on oublie git add, git status montre encore "both modified: fichier.txt".
+Ce que force-with-lease verifie en plus de force : force-with-lease regarde si la branche distante est toujours au commit que je connaissais au dernier fetch. Si quelqu'un a pousse entre temps, la commande refuse. Force de son cote ecrase sans rien verifier.
 
-11) Graphe final
+Scenario d'equipe protege : Alice force-push une version corrigee. Bob n'a pas vu la modif et force-push a son tour. Avec force, Bob efface le travail d'Alice sans le savoir. Avec force-with-lease, Bob est bloque parce que son git voit que la branche distante a bouge depuis son dernier fetch. Il doit d'abord recuperer le travail d'Alice.
 
-*   c65c973 (HEAD -> main) Merge feature-c : résolution du conflit
-|\
-| * b204d44 (feature-c) feature-c modifie ligne 1
-* | e3447fe main modifie ligne 1
-|/
-*   60140d2 Merge branch 'feature-b'
-|\
-| * b22d3cb (feature-b) Ajout ligne feature-b
-* | 3dcb970 Commit sur main (autre fichier)
-|/
-* da66c04 (feature-a) Ajout ligne feature-a
-* c4a4b39 Premier commit sur main
+14)Interet du lien Issue et commit pour une revue trois mois plus tard
 
-On voit :
-feature-a : avance rapide (ligne simple)
- feature-b : fusion --no-ff (2 parents)
--
- feature-c : fusion avec conflit résolu (2 parents)
+Trois mois apres, un commit tout seul ne raconte que le quoi. Il ne dit pas pourquoi la modif a ete faite, ni quel besoin elle couvrait.
 
-12) learngitbranching
+Avec le lien Closes #1, on peut remonter du commit vers l'Issue. L'Issue contient la description du besoin et les echanges. Le relecteur comprend l'intention du changement, pas seulement son contenu technique. Ca evite de refaire le meme travail ou de defaire une decision sans connaitre la raison.
 
-Non faite (étape facultative).
+## Livrable - URL du depot
+
+https://github.com/CLARAlove12/clarisseTP5
+Issue #1 fermee par le commit 0cc4ff2.
